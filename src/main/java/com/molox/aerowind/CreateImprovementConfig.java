@@ -1,4 +1,4 @@
-package com.molox.cimprovement;
+package com.molox.aerowind;
 
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.event.config.ModConfigEvent;

@@ -1,6 +1,6 @@
-package com.molox.cimprovement;
+package com.molox.aerowind;
 
-import com.molox.cimprovement.handler.WindSoundHandler;
+import com.molox.aerowind.handler.WindSoundHandler;
 import net.neoforged.neoforge.common.NeoForge;
 
 public class SableIntegration {

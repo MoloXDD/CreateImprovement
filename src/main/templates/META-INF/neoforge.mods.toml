@@ -7,8 +7,10 @@ modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
 description='''
-${mod_name}
+A mod that allows you to hear the sound of wind while riding an Aeronautics vehicle, with the volume dynamically adjusted based on the vehicle's speed and whether you are sheltered.
+一个能在你乘坐航空学载具时令你听到破风声的模组，根据载具速度和是否遮蔽会调节响度
 '''
+logoFile="icon.png"
 
 [[dependencies.${mod_id}]]
 modId="neoforge"
@@ -25,15 +27,8 @@ ordering="NONE"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
-modId="create"
+modId="aeronautics_bundled"
 type="required"
-versionRange="*"
-ordering="NONE"
-side="BOTH"
-
-[[dependencies.${mod_id}]]
-modId="sable"
-type="optional"
 versionRange="*"
 ordering="NONE"
 side="CLIENT"

@@ -1,4 +1,4 @@
-package com.molox.cimprovement.handler;
+package com.molox.aerowind.handler;
 
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.mixinterface.entity.entity_sublevel_collision.EntityMovementExtension;
