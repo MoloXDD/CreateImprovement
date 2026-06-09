@@ -1,0 +1,11 @@
+{
+  "wind_rush": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "create_improvement:wind_rush",
+        "stream": false
+      }
+    ]
+  }
+}

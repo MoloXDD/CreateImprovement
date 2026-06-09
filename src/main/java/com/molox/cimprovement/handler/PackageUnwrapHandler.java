@@ -15,6 +15,12 @@ import java.util.List;
 
 public class PackageUnwrapHandler {
 
+    private enum SlotArea {
+        HOTBAR,
+        PLAYER_INV,
+        CONTAINER
+    }
+
     public static boolean unwrapPackage(ServerPlayer player, ItemStack packageStack, int slotIndex) {
         if (!(packageStack.getItem() instanceof PackageItem)) return false;
 
@@ -40,29 +46,47 @@ public class PackageUnwrapHandler {
         AbstractContainerMenu menu = player.containerMenu;
         List<Slot> slots = menu.slots;
 
-        boolean packageInPlayerInv = slotIndex < slots.size()
-                && slots.get(slotIndex) != null
-                && slots.get(slotIndex).container instanceof Inventory;
+        SlotArea packageArea = getSlotArea(slots, slotIndex);
 
         for (ItemStack item : items) {
             ItemStack remaining = item.copy();
 
-            if (packageInPlayerInv) {
-                remaining = insertIntoSlots(slots, remaining, true, true);
+            if (packageArea == SlotArea.HOTBAR) {
+                remaining = insertIntoArea(slots, remaining, SlotArea.HOTBAR, true);
                 if (remaining.isEmpty()) continue;
-                remaining = insertIntoSlots(slots, remaining, true, false);
+                remaining = insertIntoArea(slots, remaining, SlotArea.HOTBAR, false);
                 if (remaining.isEmpty()) continue;
-                remaining = insertIntoSlots(slots, remaining, false, true);
+                remaining = insertIntoArea(slots, remaining, SlotArea.PLAYER_INV, true);
                 if (remaining.isEmpty()) continue;
-                remaining = insertIntoSlots(slots, remaining, false, false);
+                remaining = insertIntoArea(slots, remaining, SlotArea.PLAYER_INV, false);
+                if (remaining.isEmpty()) continue;
+                remaining = insertIntoArea(slots, remaining, SlotArea.CONTAINER, true);
+                if (remaining.isEmpty()) continue;
+                remaining = insertIntoArea(slots, remaining, SlotArea.CONTAINER, false);
+            } else if (packageArea == SlotArea.PLAYER_INV) {
+                remaining = insertIntoArea(slots, remaining, SlotArea.PLAYER_INV, true);
+                if (remaining.isEmpty()) continue;
+                remaining = insertIntoArea(slots, remaining, SlotArea.PLAYER_INV, false);
+                if (remaining.isEmpty()) continue;
+                remaining = insertIntoArea(slots, remaining, SlotArea.HOTBAR, true);
+                if (remaining.isEmpty()) continue;
+                remaining = insertIntoArea(slots, remaining, SlotArea.HOTBAR, false);
+                if (remaining.isEmpty()) continue;
+                remaining = insertIntoArea(slots, remaining, SlotArea.CONTAINER, true);
+                if (remaining.isEmpty()) continue;
+                remaining = insertIntoArea(slots, remaining, SlotArea.CONTAINER, false);
             } else {
-                remaining = insertIntoSlots(slots, remaining, false, true);
+                remaining = insertIntoArea(slots, remaining, SlotArea.CONTAINER, true);
                 if (remaining.isEmpty()) continue;
-                remaining = insertIntoSlots(slots, remaining, false, false);
+                remaining = insertIntoArea(slots, remaining, SlotArea.CONTAINER, false);
                 if (remaining.isEmpty()) continue;
-                remaining = insertIntoSlots(slots, remaining, true, true);
+                remaining = insertIntoArea(slots, remaining, SlotArea.PLAYER_INV, true);
                 if (remaining.isEmpty()) continue;
-                remaining = insertIntoSlots(slots, remaining, true, false);
+                remaining = insertIntoArea(slots, remaining, SlotArea.PLAYER_INV, false);
+                if (remaining.isEmpty()) continue;
+                remaining = insertIntoArea(slots, remaining, SlotArea.HOTBAR, true);
+                if (remaining.isEmpty()) continue;
+                remaining = insertIntoArea(slots, remaining, SlotArea.HOTBAR, false);
             }
 
             if (!remaining.isEmpty()) {
@@ -71,6 +95,13 @@ public class PackageUnwrapHandler {
         }
 
         return true;
+    }
+
+    private static SlotArea getSlotArea(List<Slot> slots, int slotIndex) {
+        if (slotIndex < 0 || slotIndex >= slots.size()) return SlotArea.CONTAINER;
+        Slot slot = slots.get(slotIndex);
+        if (!(slot.container instanceof Inventory)) return SlotArea.CONTAINER;
+        return Inventory.isHotbarSlot(slot.getContainerSlot()) ? SlotArea.HOTBAR : SlotArea.PLAYER_INV;
     }
 
     private static void consumePackage(ServerPlayer player, int slotIndex) {
@@ -86,11 +117,10 @@ public class PackageUnwrapHandler {
         menu.broadcastChanges();
     }
 
-    private static ItemStack insertIntoSlots(List<Slot> slots, ItemStack toInsert,
-                                             boolean playerInv, boolean mergeOnly) {
+    private static ItemStack insertIntoArea(List<Slot> slots, ItemStack toInsert,
+                                            SlotArea area, boolean mergeOnly) {
         for (Slot slot : slots) {
-            boolean isPlayerSlot = slot.container instanceof Inventory;
-            if (isPlayerSlot != playerInv) continue;
+            if (getArea(slot) != area) continue;
             if (!slot.mayPlace(toInsert)) continue;
 
             ItemStack inSlot = slot.getItem();
@@ -122,5 +152,10 @@ public class PackageUnwrapHandler {
         }
 
         return toInsert;
+    }
+
+    private static SlotArea getArea(Slot slot) {
+        if (!(slot.container instanceof Inventory)) return SlotArea.CONTAINER;
+        return Inventory.isHotbarSlot(slot.getContainerSlot()) ? SlotArea.HOTBAR : SlotArea.PLAYER_INV;
     }
 }

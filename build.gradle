@@ -70,12 +70,16 @@ neoForge {
     }
 }
 
+
 configurations {
     runtimeClasspath.extendsFrom localRuntime
 }
 
 dependencies {
     implementation files("libs/create-1.21.1-6.0.10.jar")
+    implementation files("libs/create-aeronautics-bundled-1.21.1-1.2.1.jar")
+    implementation files("libs/sable-neoforge-1.21.1-1.2.2.jar")
+    compileOnly files("libs/sable-companion-common-1.21.1-1.6.0.jar")
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
