@@ -8,7 +8,9 @@ version="${mod_version}"
 displayName="${mod_name}"
 description='''
 A mod that allows you to hear the sound of wind while riding an Aeronautics vehicle, with the volume dynamically adjusted based on the vehicle's speed and whether you are sheltered.
+You can adjust the speed threshold, volume range, and sheltered volume coefficient in the config file.
 一个能在你乘坐航空学载具时令你听到破风声的模组，根据载具速度和是否遮蔽会调节响度
+在配置文件里可以调节速度阈值、响度范围、遮蔽时响度系数
 '''
 logoFile="icon.png"
 
