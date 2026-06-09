@@ -2,7 +2,6 @@ package com.molox.aerowind.handler;
 
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.mixinterface.entity.entity_sublevel_collision.EntityMovementExtension;
-import dev.ryanhcode.sable.mixinterface.entity.entity_sublevel_collision.LivingEntityMovementExtension;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.client.Minecraft;
@@ -20,7 +19,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import org.joml.Vector3d;
+import org.joml.Vector3dc;
 
 @OnlyIn(Dist.CLIENT)
 public class WindSoundHandler {
@@ -50,20 +49,8 @@ public class WindSoundHandler {
         }
 
         SubLevel trackingSubLevel = ((EntityMovementExtension) player).sable$getTrackingSubLevel();
-        Vector3d inheritedVelocity = null;
-        double speedPerSecond = 0.0;
 
-        boolean onVehicle = false;
-
-        if (trackingSubLevel instanceof ClientSubLevel) {
-            inheritedVelocity = ((LivingEntityMovementExtension) player).sable$getInheritedVelocity();
-            speedPerSecond = inheritedVelocity.length() * 20.0;
-            if (speedPerSecond >= minSpeedPerSecond) {
-                onVehicle = true;
-            }
-        }
-
-        if (!onVehicle) {
+        if (!(trackingSubLevel instanceof ClientSubLevel clientSubLevel)) {
             leaveDelayCounter++;
             if (leaveDelayCounter >= LEAVE_DELAY_TICKS) {
                 fadeOut();
@@ -73,10 +60,18 @@ public class WindSoundHandler {
 
         leaveDelayCounter = 0;
 
+        Vec3 velocity = getSubLevelVelocity(clientSubLevel);
+        double speedPerSecond = velocity.length() * 20.0;
+
+        if (speedPerSecond < minSpeedPerSecond) {
+            fadeOut();
+            return;
+        }
+
         double t = Math.min((speedPerSecond - minSpeedPerSecond) / (maxSpeedPerSecond - minSpeedPerSecond), 1.0);
         float openVolume = minVolume + (float) t * (maxVolume - minVolume);
 
-        boolean exposed = isExposed(player, (ClientSubLevel) trackingSubLevel, inheritedVelocity);
+        boolean exposed = isExposed(player, clientSubLevel, velocity);
         float targetVolume = exposed ? openVolume : openVolume * blockedFactor;
 
         if (currentSound == null || currentSound.isStopped()) {
@@ -87,14 +82,22 @@ public class WindSoundHandler {
         }
     }
 
-    private boolean isExposed(LocalPlayer player, ClientSubLevel clientSubLevel, Vector3d velocityPerTick) {
-        if (velocityPerTick.lengthSquared() < 1e-10) return true;
+    private Vec3 getSubLevelVelocity(ClientSubLevel clientSubLevel) {
+        Vector3dc currentPos = clientSubLevel.logicalPose().position();
+        Vector3dc lastPos = clientSubLevel.lastPose().position();
+        return new Vec3(
+                currentPos.x() - lastPos.x(),
+                currentPos.y() - lastPos.y(),
+                currentPos.z() - lastPos.z()
+        );
+    }
+
+    private boolean isExposed(LocalPlayer player, ClientSubLevel clientSubLevel, Vec3 velocityPerTick) {
+        if (velocityPerTick.lengthSqr() < 1e-10) return true;
 
         Pose3dc pose = clientSubLevel.logicalPose();
 
-        Vec3 globalVelocityVec = new Vec3(velocityPerTick.x, velocityPerTick.y, velocityPerTick.z);
-        Vec3 localDir = pose.transformNormalInverse(globalVelocityVec).normalize();
-
+        Vec3 localDir = pose.transformNormalInverse(velocityPerTick).normalize();
         Vec3 localPlayerEyePos = pose.transformPositionInverse(player.getEyePosition());
         Vec3 localEnd = localPlayerEyePos.add(localDir.scale(RAYCAST_DISTANCE));
 
